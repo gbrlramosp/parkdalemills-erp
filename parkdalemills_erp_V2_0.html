@@ -735,7 +735,6 @@ async function abrirModalOperador(id) {
     document.getElementById('modal-op-nombre').value = u.nombre_completo;
     document.getElementById('modal-op-empleado').value = u.no_empleado;
     document.getElementById('modal-op-usuario').value = u.usuario;
-    document.getElementById('modal-op-contraseña').value = '';
     document.getElementById('modal-op-rol').value = u.rol;
     document.getElementById('modal-operador-overlay').classList.remove('hidden');
 }
@@ -749,7 +748,7 @@ async function actualizarOperadorModal(e) {
     const nuevoNombre = document.getElementById('modal-op-nombre').value.trim();
     const nuevoEmpleado = document.getElementById('modal-op-empleado').value.trim();
     const nuevoRol = document.getElementById('modal-op-rol').value;
-    const nuevaPass = document.getElementById('modal-op-contraseña').value;
+
     showLoading();
     try {
         // Verificar usuario duplicado
