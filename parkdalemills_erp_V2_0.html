@@ -16,10 +16,10 @@
             --danger: #b12d2d;
             --bg: #f0f0f0;
             --surface: #ffffff;
-            --sidebar-bg: #132a13;
+            --sidebar-bg: #1b273b;
             --sidebar-text: #c9d4df;
-            --sidebar-hover: #1d1d1d;
-            --sidebar-active: #4d4d4d;
+            --sidebar-hover: #1b18188a;
+            --sidebar-active: #4d4d4de1;
             --text: #172331;
             --text-secondary: #586a7e;
             --border: #d7e0ea;
@@ -274,8 +274,9 @@
                 <div class="form-group"><label>Área</label><select id="modal-area" required><option>G-33</option><option>Open End</option><option>Cardado</option><option>BO-A</option><option>Estirado</option><option>Apertura</option><option>Xorella</option><option>Chillers</option><option>Compresores</option><option>FH/AW</option><option>Coneras</option><option>Veloz</option><option>Servicios</option><option>Almacén</option><option>Sistema Contra Incendios</option><option>Polycotton Apertura</option><option>Polycotton Cardas</option><option>Polycotton Estirado</option><option>Polycotton Open End</option><option>Polycotton Servicios</option><option>Reclaim</option></select></div>
                 <div class="form-group full-width"><label>Observaciones</label><textarea id="modal-observaciones" rows="3"></textarea></div>
             </div>
-            <div style="margin-top:1.5rem;display:flex;gap:0.8rem;">
+            <div style="margin-top:1.5rem;display:flex;gap:0.8rem;flex-wrap:wrap;">
                 <button type="button" class="btn btn-outline" onclick="cerrarModal()"><span class="btn-icon" data-icon="x"></span> Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-registro" style="display:none;" onclick="guardarCambiosRegistro()"><span class="btn-icon" data-icon="save"></span> Guardar Cambios</button>
                 <button type="button" class="btn" id="btn-eliminar-registro" style="background:var(--danger);color:#fff;display:none;" onclick="eliminarRegistroModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar Registro</button>
             </div>
         </form>
@@ -532,8 +533,14 @@ function actualizarUI() {
     document.getElementById('btn-descargar-bitacora').style.display = isAdmin ? 'inline-flex' : 'none';
     document.getElementById('sidebar-user-info').textContent = sesion ? `${sesion.nombre_completo} (${sesion.rol})` : '';
     if (sesion) document.getElementById('cr-colaborador').value = sesion.nombre_completo;
-    const campos = document.querySelectorAll('#form-modal-detalle input:not([type="hidden"]), #form-modal-detalle select, #form-modal-detalle textarea');
-    campos.forEach(c => c.disabled = true);
+    // Habilitar campos del modal solo para admin
+    const campos = document.querySelectorAll('#form-modal-detalle input:not([type="hidden"]):not([readonly]), #form-modal-detalle select, #form-modal-detalle textarea');
+    campos.forEach(c => c.disabled = !isAdmin);
+    // Mostrar botones de acción según rol
+    const btnGuardar = document.getElementById('btn-guardar-registro');
+    const btnEliminar = document.getElementById('btn-eliminar-registro');
+    if (btnGuardar) btnGuardar.style.display = isAdmin ? 'inline-flex' : 'none';
+    if (btnEliminar) btnEliminar.style.display = isAdmin ? 'inline-flex' : 'none';
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
@@ -991,6 +998,37 @@ async function abrirModal(id) {
     const btnEliminar = document.getElementById('btn-eliminar-registro');
     if (btnEliminar) btnEliminar.style.display = sesion?.rol === 'administrador' ? 'inline-flex' : 'none';
     renderStaticIcons();
+}
+
+async function guardarCambiosRegistro() {
+    if (sesion?.rol !== 'administrador') { mostrarToast('Sin permisos.', true); return; }
+    const id = Number(document.getElementById('modal-id').value);
+    const horaInt = document.getElementById('modal-hora-intervencion').value;
+    const horaFin = document.getElementById('modal-hora-finalizacion').value;
+    const tiempo = calcularHorasEntre(horaInt, horaFin) || document.getElementById('modal-tiempo').value;
+    showLoading();
+    try {
+        const { error } = await sb.from('registros').update({
+            fecha_registro: document.getElementById('modal-fecha').value,
+            turno: document.getElementById('modal-turno').value,
+            hora_reporte: document.getElementById('modal-hora-reporte').value,
+            hora_intervencion: horaInt,
+            hora_finalizacion: horaFin,
+            tipo_intervencion: document.getElementById('modal-tipo-intervencion').value,
+            tiempo_invertido: Number(tiempo),
+            area: document.getElementById('modal-area').value,
+            observaciones: document.getElementById('modal-observaciones').value
+        }).eq('id', id);
+        if (error) { mostrarToast('Error al guardar: ' + error.message, true); return; }
+        invalidarCache();
+        cerrarModal();
+        const vistaActiva = document.querySelector('.view.active');
+        if (vistaActiva?.id === 'view-consultar-bitacora') await actualizarVistaBitacora();
+        else await cargarInicio();
+        mostrarToast('\u2713 Registro actualizado correctamente.');
+    } finally {
+        hideLoading();
+    }
 }
 
 function cerrarModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
