@@ -203,9 +203,6 @@
     <div id="view-agregar-operador" class="view">
         <h2><span class="title-icon" data-icon="user-plus"></span> Agregar Nuevo Operador</h2>
         <div class="card">
-            <p style="background:#f0f7ff;border:1px solid #b8d4f0;border-radius:6px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;color:#1a4a7a;">
-                <strong>Nota:</strong> Al agregar un operador, se crea su cuenta de acceso en el sistema. La contraseña podrá ser cambiada posteriormente desde "Consultar Operadores".
-            </p>
             <form id="form-agregar-operador" onsubmit="agregarOperador(event)">
                 <div class="form-grid">
                     <div class="form-group"><label>Nombre Completo</label><input type="text" id="op-nombre" required></div>
@@ -276,7 +273,6 @@
             </div>
             <div style="margin-top:1.5rem;display:flex;gap:0.8rem;flex-wrap:wrap;">
                 <button type="button" class="btn btn-outline" onclick="cerrarModal()"><span class="btn-icon" data-icon="x"></span> Cerrar</button>
-                <button type="button" class="btn btn-primary" id="btn-guardar-registro" style="display:none;" onclick="guardarCambiosRegistro()"><span class="btn-icon" data-icon="save"></span> Guardar Cambios</button>
                 <button type="button" class="btn" id="btn-eliminar-registro" style="background:var(--danger);color:#fff;display:none;" onclick="eliminarRegistroModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar Registro</button>
             </div>
         </form>
@@ -287,19 +283,18 @@
 <div class="modal-overlay hidden" id="modal-operador-overlay">
     <div class="modal" id="modal-operador">
         <button class="modal-close" onclick="cerrarModalOperador()" aria-label="Cerrar"><span class="btn-icon" data-icon="x"></span></button>
-        <h3><span class="title-icon" data-icon="user"></span> Editar Operador</h3>
-        <form id="form-modal-operador" onsubmit="actualizarOperadorModal(event)">
+        <h3><span class="title-icon" data-icon="user"></span> Datos del Operador</h3>
+        <form id="form-modal-operador" onsubmit="event.preventDefault()">
             <input type="hidden" id="modal-op-id">
             <div class="form-grid">
-                <div class="form-group"><label>Nombre Completo</label><input type="text" id="modal-op-nombre" required></div>
-                <div class="form-group"><label>No. Empleado</label><input type="text" id="modal-op-empleado" required></div>
-                <div class="form-group"><label>Usuario</label><input type="text" id="modal-op-usuario" required></div>
-                <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="modal-op-contraseña" placeholder="Dejar vacío si no cambia" minlength="6"></div>
-                <div class="form-group"><label>Rol</label><select id="modal-op-rol" required><option value="administrador">Administrador</option><option value="operador">Operador</option></select></div>
+                <div class="form-group"><label>Nombre Completo</label><input type="text" id="modal-op-nombre" disabled></div>
+                <div class="form-group"><label>No. Empleado</label><input type="text" id="modal-op-empleado" disabled></div>
+                <div class="form-group"><label>Usuario</label><input type="text" id="modal-op-usuario" disabled></div>
+                <div class="form-group"><label>Rol</label><select id="modal-op-rol" disabled><option value="administrador">Administrador</option><option value="operador">Operador</option></select></div>
             </div>
             <div style="margin-top:1.5rem;display:flex;gap:0.8rem;">
-                <button type="submit" class="btn btn-primary"><span class="btn-icon" data-icon="save"></span> Actualizar</button>
-                <button type="button" class="btn btn-outline" id="btn-modal-eliminar-operador" onclick="eliminarOperadorModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar</button>
+                <button type="button" class="btn btn-outline" onclick="cerrarModalOperador()"><span class="btn-icon" data-icon="x"></span> Cerrar</button>
+                <button type="button" class="btn" id="btn-modal-eliminar-operador" style="background:var(--danger);color:#fff;" onclick="eliminarOperadorModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar</button>
             </div>
         </form>
     </div>
@@ -533,13 +528,11 @@ function actualizarUI() {
     document.getElementById('btn-descargar-bitacora').style.display = isAdmin ? 'inline-flex' : 'none';
     document.getElementById('sidebar-user-info').textContent = sesion ? `${sesion.nombre_completo} (${sesion.rol})` : '';
     if (sesion) document.getElementById('cr-colaborador').value = sesion.nombre_completo;
-    // Habilitar campos del modal solo para admin
-    const campos = document.querySelectorAll('#form-modal-detalle input:not([type="hidden"]):not([readonly]), #form-modal-detalle select, #form-modal-detalle textarea');
-    campos.forEach(c => c.disabled = !isAdmin);
-    // Mostrar botones de acción según rol
-    const btnGuardar = document.getElementById('btn-guardar-registro');
+    // Campos del modal detalle siempre en solo lectura
+    const campos = document.querySelectorAll('#form-modal-detalle input:not([type="hidden"]), #form-modal-detalle select, #form-modal-detalle textarea');
+    campos.forEach(c => c.disabled = true);
+    // Botón eliminar solo para admin
     const btnEliminar = document.getElementById('btn-eliminar-registro');
-    if (btnGuardar) btnGuardar.style.display = isAdmin ? 'inline-flex' : 'none';
     if (btnEliminar) btnEliminar.style.display = isAdmin ? 'inline-flex' : 'none';
 }
 
