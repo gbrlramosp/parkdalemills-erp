@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parkdale Mills Inc. | Mantenimiento y Servicios Hilos de Yecapixtla</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #18324a;
+            --primary-light: #274a68;
+            --primary-dark: #0f2335;
+            --accent: #c8872f;
+            --success: #26734d;
+            --danger: #b12d2d;
+            --bg: #f0f0f0;
+            --surface: #ffffff;
+            --sidebar-bg: #132a13;
+            --sidebar-text: #c9d4df;
+            --sidebar-hover: #1d1d1d;
+            --sidebar-active: #4d4d4d;
+            --text: #172331;
+            --text-secondary: #586a7e;
+            --border: #d7e0ea;
+            --input-bg: #f8fafc;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.03);
+            --shadow: 0 2px 8px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);
+            --shadow-md: 0 6px 18px rgba(0,0,0,0.07),0 2px 6px rgba(0,0,0,0.04);
+            --radius: 8px;
+            --radius-sm: 6px;
+            --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+            --font: 'Arial','Arial',system-ui,-apple-system,Arial;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;display:flex;line-height:1.5;}
+        #login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#f4f7fb 0%,#dce6ef 100%);display:flex;align-items:center;justify-content:center;z-index:1000;}
+        #login-screen.hidden{display:none;}
+        .login-card{background:var(--surface);padding:3rem 2.5rem;border-radius:12px;box-shadow:0 18px 50px rgba(16,35,52,0.14);width:420px;max-width:95vw;text-align:center;border:1px solid rgba(255,255,255,0.8);}
+        .login-card h1{font-size:1.8rem;color:var(--primary);margin-bottom:0.4rem;font-weight:700;display:flex;align-items:center;justify-content:center;gap:0.6rem;}
+        .login-card .subtitle{font-size:0.95rem;color:var(--text-secondary);margin-bottom:2rem;}
+        .login-card input{width:100%;padding:0.8rem 1rem;margin-bottom:1.1rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.95rem;background:var(--input-bg);transition:var(--transition);font-family:var(--font);}
+        .login-card input:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(30,59,90,0.08);background:#fff;}
+        .login-card button{width:100%;padding:0.8rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-size:1rem;font-weight:600;cursor:pointer;transition:var(--transition);margin-top:0.8rem;}
+        .login-card button:hover{background:var(--primary-light);transform:translateY(-1px);}
+        .login-card button:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+        .login-error{color:var(--danger);font-size:0.85rem;margin-top:0.8rem;min-height:1.2rem;}
+        #sidebar{width:260px;min-height:100vh;background:var(--sidebar-bg);color:var(--sidebar-text);display:flex;flex-direction:column;padding:1.8rem 0;border-right:1px solid rgba(255,255,255,0.08);position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform 0.3s ease;}
+        #sidebar .logo-area{padding:0 1.5rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.1);margin-bottom:1.5rem;}
+        #sidebar .logo-area h2{font-size:1.25rem;color:#fff;font-weight:700;display:flex;align-items:center;gap:0.65rem;}
+        #sidebar .user-info{font-size:0.8rem;color:rgba(255,255,255,0.7);margin-top:0.3rem;}
+        #sidebar nav{flex:1;display:flex;flex-direction:column;gap:4px;padding:0 0.8rem;}
+        #sidebar nav a{display:flex;align-items:center;gap:0.75rem;padding:0.7rem 1rem;border-radius:var(--radius-sm);text-decoration:none;color:var(--sidebar-text);font-size:0.9rem;font-weight:500;transition:var(--transition);cursor:pointer;}
+        #sidebar nav a:hover{background:var(--sidebar-hover);color:#fff;}
+        #sidebar nav a.active{background:var(--sidebar-active);color:#fff;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,0.2);}
+        .icon,.btn-icon,.title-icon{width:19px;height:19px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;}
+        .icon svg,.btn-icon svg,.title-icon svg{width:100%;height:100%;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+        #sidebar nav a .icon{width:22px;height:22px;opacity:0.9;}
+        .view h2,.chart-card h3{display:flex;align-items:center;gap:0.55rem;}
+        .btn-icon{width:16px;height:16px;}
+        .title-icon{color:var(--primary);}
+        #sidebar .logout-btn{margin:0.8rem 0.8rem 1rem;padding:0.7rem 1rem;border-radius:var(--radius-sm);background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.12);cursor:pointer;font-weight:600;font-size:0.85rem;transition:var(--transition);text-align:center;}
+        #sidebar .logout-btn:hover{background:rgba(255,255,255,0.15);color:#fff;}
+        #main-content{margin-left:260px;flex:1;padding:2rem 2.5rem;min-height:100vh;width:calc(100% - 260px);background:var(--bg);}
+        .view{display:none;animation:fadeSlide 0.25s ease;}
+        .view.active{display:block;}
+        @keyframes fadeSlide{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+        .view h2{font-size:1.6rem;margin-bottom:1.5rem;color:var(--primary);font-weight:700;}
+        .card{background:var(--surface);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow);border:1px solid var(--border);}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem 1.8rem;}
+        .form-grid .full-width{grid-column:1 / -1;}
+        .form-group{display:flex;flex-direction:column;gap:0.35rem;}
+        .form-group label{font-weight:600;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;}
+        .form-group input,.form-group select,.form-group textarea{padding:0.65rem 0.85rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:0.9rem;background:var(--input-bg);transition:var(--transition);font-family:var(--font);color:var(--text);}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(30,59,90,0.06);background:#fff;}
+        .form-group input[readonly],.form-group textarea[readonly]{background:#edf1f7;cursor:not-allowed;color:#4a5568;}
+        .form-group input:disabled,.form-group select:disabled,.form-group textarea:disabled{background:#edf1f7;color:#4a5568;cursor:not-allowed;opacity:1;}
+        .btn{padding:0.6rem 1.4rem;border-radius:var(--radius-sm);border:none;font-weight:600;font-size:0.88rem;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;gap:0.45rem;}
+        .btn>svg,.logout-btn svg,.mobile-menu-btn svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round;}
+        .btn-primary{background:var(--primary);color:#fff;}.btn-primary:hover{background:var(--primary-light);box-shadow:0 2px 8px rgba(30,59,90,0.15);}
+        .btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--primary);}.btn-outline:hover{border-color:var(--primary-light);background:#f8fafc;}
+        .btn-sm{padding:0.35rem 0.8rem;font-size:0.78rem;border-radius:5px;}
+        .btn-success{background:var(--success);color:#fff;}.btn-success:hover{background:#236b42;}
+        .btn:disabled{opacity:0.6;cursor:not-allowed;}
+        .table-container{overflow-x:auto;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);}
+        table{width:100%;border-collapse:collapse;font-size:0.875rem;}
+        table thead th{background:#f4f7fc;padding:0.8rem 1rem;text-align:left;font-weight:600;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;border-bottom:2px solid #e2e8f0;cursor:pointer;user-select:none;white-space:nowrap;transition:background 0.15s;}
+        table thead th:hover{background:#e8eef4;}
+        table thead th .sort-icon{margin-left:5px;font-size:0.7rem;opacity:0.4;}
+        table thead th.sorted .sort-icon{opacity:1;color:var(--primary);}
+        table tbody td{padding:0.7rem 1rem;border-bottom:1px solid #eef2f7;vertical-align:middle;}
+        table tbody tr:hover{background:#f9fbfd;}
+        .pagination{display:flex;justify-content:center;align-items:center;gap:0.4rem;padding:1rem;flex-wrap:wrap;}
+        .pagination button{padding:0.4rem 0.75rem;border-radius:5px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:0.82rem;transition:var(--transition);font-weight:500;color:var(--text-secondary);}
+        .pagination button.active-page{background:var(--primary);color:#fff;border-color:var(--primary);font-weight:600;}
+        .pagination button:hover:not(.active-page):not(:disabled){background:#f1f5f9;border-color:#cbd5e1;}
+        .filters-row{display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1.5rem;background:var(--surface);padding:1.2rem 1.5rem;border-radius:var(--radius);box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+        .filters-row .form-group{flex:1;min-width:150px;}
+        .filters-row .form-group label{font-size:0.75rem;}
+        .cards-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;}
+        .info-card{background:var(--surface);border-radius:var(--radius);padding:1.2rem 1.5rem;box-shadow:var(--shadow-sm);border:1px solid var(--border);text-align:center;border-top:3px solid var(--primary-light);}
+        .info-card .card-value{font-size:2rem;font-weight:700;color:var(--primary);}
+        .info-card .card-label{font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;margin-top:0.3rem;}
+        .modal-overlay{position:fixed;inset:0;background:rgba(15,23,35,0.6);backdrop-filter:blur(2px);z-index:500;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.2s ease;}
+        .modal-overlay.hidden{display:none;}
+        .modal{background:#fff;border-radius:12px;padding:2rem 2.2rem;width:650px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 25px 60px rgba(0,0,0,0.15);position:relative;}
+        .modal h3{margin-bottom:1.4rem;font-size:1.25rem;color:var(--primary);font-weight:700;}
+        .modal-close{position:absolute;top:1rem;right:1.2rem;background:none;border:none;font-size:1.6rem;cursor:pointer;color:#8592a6;}.modal-close:hover{color:#1e2a36;}
+        @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+        .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+        .charts-grid .chart-card{background:#fff;border-radius:var(--radius);padding:1.6rem;box-shadow:var(--shadow);border:1px solid var(--border);}
+        .charts-grid .chart-card.full{grid-column:1/-1;}
+        .charts-grid .chart-card h3{font-size:1rem;margin-bottom:1.2rem;color:var(--text);font-weight:600;}
+        .charts-grid canvas{max-height:300px;}
+        .toast{position:fixed;bottom:2rem;right:2rem;background:var(--primary-dark);color:#fff;padding:0.8rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.9rem;z-index:600;animation:slideUp 0.3s ease;box-shadow:0 8px 24px rgba(0,0,0,0.12);}
+        .toast.error{background:#b84040;}
+        @keyframes slideUp{from{transform:translateY(25px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+        /* Loading overlay */
+        #loading-overlay{position:fixed;inset:0;background:rgba(15,23,35,0.5);z-index:2000;display:flex;align-items:center;justify-content:center;}
+        #loading-overlay.hidden{display:none;}
+        .spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,0.2);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        /* Config banner */
+        #config-banner{background:#fffbe6;border:1.5px solid #f0c040;border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:0.9rem;color:#7a5f00;display:none;}
+        #config-banner.visible{display:block;}
+        @media(max-width:768px){
+            #sidebar{width:260px;transform:translateX(-100%);}#sidebar.open{transform:translateX(0);}
+            #main-content{margin-left:0;width:100%;padding:1.2rem;}
+            .form-grid{grid-template-columns:1fr;}.charts-grid{grid-template-columns:1fr;}.filters-row .form-group{min-width:100%;}
+            .mobile-menu-btn{display:block!important;}
+        }
+        .mobile-menu-btn{display:none;position:fixed;top:1.2rem;left:1.2rem;z-index:200;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:0.55rem;cursor:pointer;box-shadow:var(--shadow-md);}
+    </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Abrir menú"><span class="btn-icon" data-icon="menu"></span></button>
+
+<div id="login-screen">
+    <div class="login-card">
+        <h1>&#9881; Parkdale Mills Inc.</h1>
+        <p class="subtitle">Mantenimiento y Servicios — Hilos de Yecapixtla</p>
+        <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
+        <input type="password" id="login-pass" placeholder="Contraseña">
+        <button id="login-btn" onclick="login()">Ingresar</button>
+        <div class="login-error" id="login-error"></div>
+        <p style="font-size:0.75rem;color:#8592a6;margin-top:1.2rem;">Parkdale Mills Inc. | Hilos de Yecapixtla 2026.</p>
+    </div>
+</div>
+
+<aside id="sidebar">
+    <div class="logo-area"><h2>&#9881; Parkdale Mills Inc.</h2><div class="user-info" id="sidebar-user-info"></div></div>
+    <nav>
+        <a data-view="inicio" class="active" onclick="switchView('inicio')"><span class="icon" data-icon="home"></span> Inicio</a>
+        <a data-view="crear-registro" onclick="switchView('crear-registro')"><span class="icon" data-icon="clipboard-plus"></span> Crear Registro</a>
+        <a data-view="agregar-operador" id="menu-agregar-operador" onclick="switchView('agregar-operador')"><span class="icon" data-icon="user-plus"></span> Agregar Operador</a>
+        <a data-view="consultar-operadores" id="menu-consultar-operadores" onclick="switchView('consultar-operadores')"><span class="icon" data-icon="users"></span> Consultar Operadores</a>
+        <a data-view="consultar-bitacora" onclick="switchView('consultar-bitacora')"><span class="icon" data-icon="clipboard-list"></span> Consultar Bitácora</a>
+        <a data-view="estadisticas" onclick="switchView('estadisticas')"><span class="icon" data-icon="chart"></span> Estadísticas</a>
+    </nav>
+    <button class="logout-btn" onclick="logout()"><span class="btn-icon" data-icon="logout"></span> Cerrar Sesión</button>
+</aside>
+
+<div id="main-content">
+    <!-- Banner de configuración -->
+    <div id="config-banner">
+        ⚠️ <strong>Configuración requerida:</strong> Edita las variables <code>SUPABASE_URL</code> y <code>SUPABASE_KEY</code> al inicio del script con los datos de tu proyecto en Supabase.
+    </div>
+
+    <div id="view-inicio" class="view active">
+        <h2><span class="title-icon" data-icon="clipboard-list"></span> Registros del Día — <span id="fecha-hoy"></span></h2>
+        <div class="cards-container" id="cards-inicio"></div>
+        <div class="table-container" id="tabla-inicio-container"></div>
+        <div class="pagination" id="paginacion-inicio"></div>
+    </div>
+
+    <div id="view-crear-registro" class="view">
+        <h2><span class="title-icon" data-icon="clipboard-plus"></span> Nuevo Registro de Actividad</h2>
+        <div class="card">
+            <form id="form-crear-registro" onsubmit="crearRegistro(event)">
+                <div class="form-grid">
+                    <div class="form-group"><label>Fecha de Registro</label><input type="date" id="cr-fecha" required></div>
+                    <div class="form-group"><label>Colaborador</label><input type="text" id="cr-colaborador" readonly></div>
+                    <div class="form-group"><label>Turno</label><select id="cr-turno" required><option value="">Seleccione...</option><option>A</option><option>B</option><option>C</option><option>D</option><option>L-V</option><option>ROJO ESPECIAL</option><option>AZUL ESPECIAL</option></select></div>
+                    <div class="form-group"><label>Hora de Reporte</label><input type="time" id="cr-hora-reporte" required></div>
+                    <div class="form-group"><label>Hora de Intervención</label><input type="time" id="cr-hora-intervencion" required oninput="actualizarTiempoCrear()"></div>
+                    <div class="form-group"><label>Hora de Finalización</label><input type="time" id="cr-hora-finalizacion" required oninput="actualizarTiempoCrear()"></div>
+                    <div class="form-group"><label>Tipo de Intervención</label><select id="cr-tipo-intervencion" required><option value="">Seleccione...</option><option>Mecánico</option><option>Eléctrico</option></select></div>
+                    <div class="form-group"><label>Tiempo Invertido (horas)</label><input type="number" id="cr-tiempo" min="0" step="0.01" readonly required></div>
+                    <div class="form-group"><label>Área</label><select id="cr-area" required><option value="">Seleccione...</option><option>G-33</option><option>Open End</option><option>Cardado</option><option>BO-A</option><option>Estirado</option><option>Apertura</option><option>Xorella</option><option>Chillers</option><option>Compresores</option><option>FH/AW</option><option>Coneras</option><option>Veloz</option><option>Servicios</option><option>Almacén</option><option>Sistema Contra Incendios</option><option>Polycotton Apertura</option><option>Polycotton Cardas</option><option>Polycotton Estirado</option><option>Polycotton Open End</option><option>Polycotton Servicios</option><option>Reclaim</option></select></div>
+                    <div class="form-group full-width"><label>Observaciones</label><textarea id="cr-observaciones" rows="3"></textarea></div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="margin-top:1.5rem;"><span class="btn-icon" data-icon="save"></span> Guardar Registro</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-agregar-operador" class="view">
+        <h2><span class="title-icon" data-icon="user-plus"></span> Agregar Nuevo Operador</h2>
+        <div class="card">
+            <p style="background:#f0f7ff;border:1px solid #b8d4f0;border-radius:6px;padding:0.9rem 1.2rem;margin-bottom:1.5rem;font-size:0.88rem;color:#1a4a7a;">
+                <strong>Nota:</strong> Al agregar un operador, se crea su cuenta de acceso en el sistema. La contraseña podrá ser cambiada posteriormente desde "Consultar Operadores".
+            </p>
+            <form id="form-agregar-operador" onsubmit="agregarOperador(event)">
+                <div class="form-grid">
+                    <div class="form-group"><label>Nombre Completo</label><input type="text" id="op-nombre" required></div>
+                    <div class="form-group"><label>No. de Empleado</label><input type="text" id="op-empleado" required></div>
+                    <div class="form-group"><label>Usuario</label><input type="text" id="op-usuario" required autocomplete="off"></div>
+                    <div class="form-group"><label>Contraseña</label><input type="password" id="op-contraseña" required minlength="6"></div>
+                    <div class="form-group"><label>Rol</label><select id="op-rol" required><option value="">Seleccione...</option><option value="administrador">Administrador</option><option value="operador">Operador</option></select></div>
+                </div>
+                <button type="submit" id="btn-agregar-operador" class="btn btn-success" style="margin-top:1.5rem;"><span class="btn-icon" data-icon="user-plus"></span> Agregar Operador</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-consultar-operadores" class="view">
+        <h2><span class="title-icon" data-icon="users"></span> Consultar Operadores</h2>
+        <div class="filters-row" id="filtros-operadores">
+            <div class="form-group"><label>Nombre Completo</label><input type="text" id="filtro-op-nombre" oninput="cargarOperadores()"></div>
+            <div class="form-group"><label>No. Empleado</label><input type="text" id="filtro-op-empleado" oninput="cargarOperadores()"></div>
+            <div class="form-group"><label>Rol</label><select id="filtro-op-rol" onchange="cargarOperadores()"><option value="">Todos</option><option value="administrador">Administrador</option><option value="operador">Operador</option></select></div>
+        </div>
+        <div class="table-container" id="tabla-operadores-container"></div>
+        <div class="pagination" id="paginacion-operadores"></div>
+    </div>
+
+    <div id="view-consultar-bitacora" class="view">
+        <h2><span class="title-icon" data-icon="clipboard-list"></span> Consultar Bitácora</h2>
+        <div class="filters-row" id="filtros-bitacora"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.8rem;margin-bottom:1.2rem;">
+            <span id="total-registros-bitacora"></span>
+            <button class="btn btn-outline btn-sm" id="btn-descargar-bitacora" onclick="descargarCSV()"><span class="btn-icon" data-icon="download"></span> Descargar CSV</button>
+        </div>
+        <div class="table-container" id="tabla-bitacora-container"></div>
+        <div class="pagination" id="paginacion-bitacora"></div>
+    </div>
+
+    <div id="view-estadisticas" class="view">
+        <h2><span class="title-icon" data-icon="chart"></span> Estadísticas y Análisis</h2>
+        <div class="filters-row" id="filtros-estadisticas"></div>
+        <div class="cards-container" id="cards-estadisticas"></div>
+        <div class="charts-grid">
+            <div class="chart-card"><h3><span class="title-icon" data-icon="bar-chart"></span> Registros por Área</h3><canvas id="chart-barras"></canvas></div>
+            <div class="chart-card"><h3><span class="title-icon" data-icon="pie-chart"></span> Tipo de Intervención</h3><canvas id="chart-pastel"></canvas></div>
+            <div class="chart-card"><h3><span class="title-icon" data-icon="clock"></span> Registros por Turno</h3><canvas id="chart-turno"></canvas></div>
+            <div class="chart-card"><h3><span class="title-icon" data-icon="timer"></span> Tiempo Invertido por Área (horas)</h3><canvas id="chart-barras-tiempo"></canvas></div>
+            <div class="chart-card full"><h3><span class="title-icon" data-icon="trend"></span> Tendencia de Registros (últimos 30 días)</h3><canvas id="chart-linea"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal detalle registro -->
+<div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal" id="modal-detalle">
+        <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar"><span class="btn-icon" data-icon="x"></span></button>
+        <h3><span class="title-icon" data-icon="eye"></span> Detalle del Registro</h3>
+        <form id="form-modal-detalle" onsubmit="event.preventDefault()">
+            <input type="hidden" id="modal-id">
+            <div class="form-grid">
+                <div class="form-group"><label>Fecha</label><input type="date" id="modal-fecha" required></div>
+                <div class="form-group"><label>Colaborador</label><input type="text" id="modal-colaborador" readonly></div>
+                <div class="form-group"><label>Turno</label><select id="modal-turno" required><option>A</option><option>B</option><option>C</option><option>D</option><option>L-V</option><option>ROJO ESPECIAL</option><option>AZUL ESPECIAL</option></select></div>
+                <div class="form-group"><label>Hora de Reporte</label><input type="time" id="modal-hora-reporte" required></div>
+                <div class="form-group"><label>Hora de Intervención</label><input type="time" id="modal-hora-intervencion" required></div>
+                <div class="form-group"><label>Hora de Finalización</label><input type="time" id="modal-hora-finalizacion" required></div>
+                <div class="form-group"><label>Tipo de Intervención</label><select id="modal-tipo-intervencion" required><option>Mecánico</option><option>Eléctrico</option></select></div>
+                <div class="form-group"><label>Tiempo Invertido (horas)</label><input type="number" id="modal-tiempo" min="0" step="0.01" readonly required></div>
+                <div class="form-group"><label>Área</label><select id="modal-area" required><option>G-33</option><option>Open End</option><option>Cardado</option><option>BO-A</option><option>Estirado</option><option>Apertura</option><option>Xorella</option><option>Chillers</option><option>Compresores</option><option>FH/AW</option><option>Coneras</option><option>Veloz</option><option>Servicios</option><option>Almacén</option><option>Sistema Contra Incendios</option><option>Polycotton Apertura</option><option>Polycotton Cardas</option><option>Polycotton Estirado</option><option>Polycotton Open End</option><option>Polycotton Servicios</option><option>Reclaim</option></select></div>
+                <div class="form-group full-width"><label>Observaciones</label><textarea id="modal-observaciones" rows="3"></textarea></div>
+            </div>
+            <div style="margin-top:1.5rem;display:flex;gap:0.8rem;">
+                <button type="button" class="btn btn-outline" onclick="cerrarModal()"><span class="btn-icon" data-icon="x"></span> Cerrar</button>
+                <button type="button" class="btn" id="btn-eliminar-registro" style="background:var(--danger);color:#fff;display:none;" onclick="eliminarRegistroModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar Registro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal editar operador -->
+<div class="modal-overlay hidden" id="modal-operador-overlay">
+    <div class="modal" id="modal-operador">
+        <button class="modal-close" onclick="cerrarModalOperador()" aria-label="Cerrar"><span class="btn-icon" data-icon="x"></span></button>
+        <h3><span class="title-icon" data-icon="user"></span> Editar Operador</h3>
+        <form id="form-modal-operador" onsubmit="actualizarOperadorModal(event)">
+            <input type="hidden" id="modal-op-id">
+            <div class="form-grid">
+                <div class="form-group"><label>Nombre Completo</label><input type="text" id="modal-op-nombre" required></div>
+                <div class="form-group"><label>No. Empleado</label><input type="text" id="modal-op-empleado" required></div>
+                <div class="form-group"><label>Usuario</label><input type="text" id="modal-op-usuario" required></div>
+                <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="modal-op-contraseña" placeholder="Dejar vacío si no cambia" minlength="6"></div>
+                <div class="form-group"><label>Rol</label><select id="modal-op-rol" required><option value="administrador">Administrador</option><option value="operador">Operador</option></select></div>
+            </div>
+            <div style="margin-top:1.5rem;display:flex;gap:0.8rem;">
+                <button type="submit" class="btn btn-primary"><span class="btn-icon" data-icon="save"></span> Actualizar</button>
+                <button type="button" class="btn btn-outline" id="btn-modal-eliminar-operador" onclick="eliminarOperadorModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  CONFIGURACIÓN DE SUPABASE
+//  Reemplaza estos valores con los de tu proyecto en supabase.com
+//  Project Settings → API → Project URL y anon/public key
+// ═══════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://cleiughwcwwxbgugnjqb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNsZWl1Z2h3Y3d3eGJndWduanFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzOTc0MDEsImV4cCI6MjA5NDk3MzQwMX0.zRDBfCrT-TLbffW4zCErDsjHtqq0Au1Q7NS_3n77hvg';
+
+// ═══════════════════════════════════════════════════════════════════
+//  DOMINIO INTERNO PARA EMAILS DE AUTH
+//  Supabase Auth requiere emails. Usamos un dominio interno ficticio.
+//  El usuario solo escribe su "usuario", no el email completo.
+// ═══════════════════════════════════════════════════════════════════
+const EMAIL_DOMAIN = '@parkdalemills.internal';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── CONSTANTES ───
+const TURNOS = ['A', 'B', 'C', 'D', 'L-V', 'ROJO ESPECIAL', 'AZUL ESPECIAL'];
+const TIPOS_INTERVENCION = ['Mecánico', 'Eléctrico'];
+const AREAS = ['G-33','Open End','Cardado','BO-A','Estirado','Apertura','Xorella','Chillers','Compresores','FH/AW','Coneras','Veloz','Servicios','Almacén','Sistema Contra Incendios','Polycotton Apertura','Polycotton Cardas','Polycotton Estirado','Polycotton Open End','Polycotton Servicios','Reclaim'];
+
+const ICONS = {
+    'bar-chart': '<path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16V5"/><path d="M17 16v-4"/>',
+    'chart': '<path d="M3 3v18h18"/><path d="m7 14 3-3 3 2 5-6"/>',
+    'clipboard-list': '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M8 12h8"/><path d="M8 16h8"/><path d="M8 8h8"/>',
+    'clipboard-plus': '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11v6"/><path d="M9 14h6"/>',
+    'clock': '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    'download': '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/>',
+    'eye': '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+    'home': '<path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+    'logout': '<path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 3v18h-7"/>',
+    'menu': '<path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/>',
+    'pie-chart': '<path d="M21 12a9 9 0 1 1-9-9v9Z"/><path d="M12 3a9 9 0 0 1 9 9h-9Z"/>',
+    'save': '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/>',
+    'timer': '<path d="M10 2h4"/><path d="M12 14v-4"/><circle cx="12" cy="14" r="8"/>',
+    'trash': '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/>',
+    'trend': '<path d="M3 17 9 11l4 4 7-8"/><path d="M14 7h6v6"/>',
+    'user': '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    'user-plus': '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M19 8v6"/><path d="M16 11h6"/>',
+    'users': '<path d="M16 21a6 6 0 0 0-12 0"/><circle cx="10" cy="8" r="4"/><path d="M22 21a5 5 0 0 0-5-5"/><path d="M17 4a4 4 0 0 1 0 8"/>',
+    'x': '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'
+};
+
+function iconSvg(name) {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${ICONS[name] || ''}</svg>`;
+}
+function renderStaticIcons() {
+    document.querySelectorAll('[data-icon]').forEach(el => { el.innerHTML = iconSvg(el.dataset.icon); });
+}
+
+// ─── ESTADO GLOBAL ───
+let sesion = null;
+// Cache en memoria para evitar llamadas repetidas
+let _registrosCache = null;
+let _usuariosCache = null;
+
+// ─── LOADING ───
+function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
+
+// ─── UTILIDADES ───
+function calcularHorasEntre(inicio, fin) {
+    if (!inicio || !fin) return '';
+    const [ih, im] = inicio.split(':').map(Number);
+    const [fh, fm] = fin.split(':').map(Number);
+    if ([ih, im, fh, fm].some(Number.isNaN)) return '';
+    let minutosInicio = ih * 60 + im;
+    let minutosFin = fh * 60 + fm;
+    if (minutosFin < minutosInicio) minutosFin += 24 * 60;
+    return Math.max((minutosFin - minutosInicio) / 60, 0).toFixed(2);
+}
+function actualizarTiempoCrear() {
+    const horas = calcularHorasEntre(
+        document.getElementById('cr-hora-intervencion').value,
+        document.getElementById('cr-hora-finalizacion').value
+    );
+    document.getElementById('cr-tiempo').value = horas;
+}
+function normalizarTurno(turno) {
+    const mapa = { Matutino: 'A', Vespertino: 'B', Nocturno: 'C', Mixto: 'D' };
+    return TURNOS.includes(turno) ? turno : (mapa[turno] || turno || '');
+}
+function normalizarTipoIntervencion(reg) {
+    if (TIPOS_INTERVENCION.includes(reg.tipo_intervencion)) return reg.tipo_intervencion;
+    const texto = `${reg.puesto || ''} ${reg.actividad || ''}`.toLowerCase();
+    return texto.includes('eléctr') || texto.includes('electr') ? 'Eléctrico' : 'Mecánico';
+}
+function normalizarRegistro(reg) {
+    const horasCalculadas = calcularHorasEntre(reg.hora_intervencion, reg.hora_finalizacion);
+    const tiempo = horasCalculadas !== ''
+        ? Number(horasCalculadas)
+        : (reg.actividad ? Number(((Number(reg.tiempo_invertido) || 0) / 60).toFixed(2)) : Number(reg.tiempo_invertido || 0));
+    return {
+        id: reg.id,
+        fecha_registro: reg.fecha_registro || '',
+        colaborador: reg.colaborador || '',
+        turno: normalizarTurno(reg.turno),
+        hora_reporte: reg.hora_reporte || '',
+        hora_intervencion: reg.hora_intervencion || '',
+        hora_finalizacion: reg.hora_finalizacion || '',
+        tipo_intervencion: normalizarTipoIntervencion(reg),
+        tiempo_invertido: tiempo,
+        area: reg.area || '',
+        observaciones: reg.observaciones || ''
+    };
+}
+function fechaISO(d) {
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().split('T')[0];
+}
+function fechaLegible(d) { return d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: '2-digit' }); }
+function restarDias(d, n) { const r = new Date(d); r.setDate(r.getDate() - n); return r; }
+function escapeHTML(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function valorTabla(row, key) {
+    if (key === 'tiempo_invertido') return Number(row[key] || 0).toFixed(2);
+    return escapeHTML(row[key] || '');
+}
+function mostrarToast(msg, error = false) {
+    const t = document.createElement('div');
+    t.className = 'toast' + (error ? ' error' : '');
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  FUNCIONES DE DATOS — SUPABASE
+// ═══════════════════════════════════════════════════════════════════
+
+async function getRegistros(forzar = false) {
+    if (_registrosCache && !forzar) return _registrosCache;
+    const { data, error } = await sb.from('registros').select('*').order('fecha_registro', { ascending: false });
+    if (error) { mostrarToast('Error al cargar registros: ' + error.message, true); return []; }
+    _registrosCache = (data || []).map(normalizarRegistro);
+    return _registrosCache;
+}
+
+async function getUsuarios(forzar = false) {
+    if (_usuariosCache && !forzar) return _usuariosCache;
+    const { data, error } = await sb.from('usuarios').select('*').order('nombre_completo');
+    if (error) { mostrarToast('Error al cargar usuarios: ' + error.message, true); return []; }
+    _usuariosCache = data || [];
+    return _usuariosCache;
+}
+
+function invalidarCache() {
+    _registrosCache = null;
+    _usuariosCache = null;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  AUTENTICACIÓN
+// ═══════════════════════════════════════════════════════════════════
+
+async function login() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value.trim();
+    const errDiv = document.getElementById('login-error');
+    const btn = document.getElementById('login-btn');
+
+    if (!user || !pass) { errDiv.textContent = 'Ingresa usuario y contraseña.'; return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Ingresando...';
+    errDiv.textContent = '';
+    showLoading();
+
+    try {
+        const email = user + EMAIL_DOMAIN;
+        const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+
+        if (error) {
+            errDiv.textContent = 'Usuario o contraseña incorrectos.';
+            return;
+        }
+
+        // Obtener datos del perfil
+        const { data: perfil, error: perfilErr } = await sb
+            .from('usuarios')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+
+        if (perfilErr || !perfil) {
+            errDiv.textContent = 'Error al cargar el perfil. Contacta al administrador.';
+            await sb.auth.signOut();
+            return;
+        }
+
+        sesion = perfil;
+        document.getElementById('login-screen').classList.add('hidden');
+        actualizarUI();
+        await switchView('inicio');
+        mostrarToast('Bienvenido/a, ' + perfil.nombre_completo);
+    } catch (e) {
+        errDiv.textContent = 'Error de conexión. Verifica la configuración de Supabase.';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+        hideLoading();
+    }
+}
+
+async function logout() {
+    showLoading();
+    await sb.auth.signOut();
+    sesion = null;
+    invalidarCache();
+    hideLoading();
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-user').value = '';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-error').textContent = '';
+}
+
+// ─── UI según rol ───
+function actualizarUI() {
+    const isAdmin = sesion?.rol === 'administrador';
+    document.getElementById('menu-agregar-operador').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('menu-consultar-operadores').style.display = isAdmin ? 'flex' : 'none';
+    document.getElementById('btn-descargar-bitacora').style.display = isAdmin ? 'inline-flex' : 'none';
+    document.getElementById('sidebar-user-info').textContent = sesion ? `${sesion.nombre_completo} (${sesion.rol})` : '';
+    if (sesion) document.getElementById('cr-colaborador').value = sesion.nombre_completo;
+    const campos = document.querySelectorAll('#form-modal-detalle input:not([type="hidden"]), #form-modal-detalle select, #form-modal-detalle textarea');
+    campos.forEach(c => c.disabled = true);
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+async function switchView(viewName) {
+    if (!sesion) return;
+    document.getElementById('sidebar').classList.remove('open');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + viewName).classList.add('active');
+    document.querySelectorAll('#sidebar nav a').forEach(a => a.classList.remove('active'));
+    const link = document.querySelector(`#sidebar nav a[data-view="${viewName}"]`);
+    if (link) link.classList.add('active');
+    showLoading();
+    try {
+        if (viewName === 'inicio') await cargarInicio();
+        if (viewName === 'consultar-bitacora') await cargarBitacora();
+        if (viewName === 'consultar-operadores') await cargarOperadores();
+        if (viewName === 'estadisticas') await cargarEstadisticas();
+    } finally {
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  CREAR REGISTRO
+// ═══════════════════════════════════════════════════════════════════
+
+async function crearRegistro(e) {
+    e.preventDefault();
+    actualizarTiempoCrear();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    showLoading();
+    try {
+        const { error } = await sb.from('registros').insert({
+            fecha_registro: document.getElementById('cr-fecha').value,
+            colaborador: sesion.nombre_completo,
+            turno: document.getElementById('cr-turno').value,
+            hora_reporte: document.getElementById('cr-hora-reporte').value,
+            hora_intervencion: document.getElementById('cr-hora-intervencion').value,
+            hora_finalizacion: document.getElementById('cr-hora-finalizacion').value,
+            tipo_intervencion: document.getElementById('cr-tipo-intervencion').value,
+            tiempo_invertido: Number(document.getElementById('cr-tiempo').value),
+            area: document.getElementById('cr-area').value,
+            observaciones: document.getElementById('cr-observaciones').value,
+            created_by: sesion.id
+        });
+        if (error) { mostrarToast('Error al guardar: ' + error.message, true); return; }
+        invalidarCache();
+        document.getElementById('form-crear-registro').reset();
+        document.getElementById('cr-colaborador').value = sesion.nombre_completo;
+        document.getElementById('cr-fecha').value = fechaISO(new Date());
+        mostrarToast('✓ Registro guardado correctamente.');
+    } finally {
+        btn.disabled = false;
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  GESTIÓN DE OPERADORES
+// ═══════════════════════════════════════════════════════════════════
+
+async function agregarOperador(e) {
+    e.preventDefault();
+    if (sesion.rol !== 'administrador') return;
+
+    const nombre = document.getElementById('op-nombre').value.trim();
+    const noEmpleado = document.getElementById('op-empleado').value.trim();
+    const usuario = document.getElementById('op-usuario').value.trim();
+    const pass = document.getElementById('op-contraseña').value;
+    const rol = document.getElementById('op-rol').value;
+    const email = usuario + EMAIL_DOMAIN;
+
+    const btn = document.getElementById('btn-agregar-operador');
+    btn.disabled = true;
+    showLoading();
+
+    try {
+        // Verificar si el usuario ya existe
+        const { data: existente } = await sb.from('usuarios').select('id').eq('usuario', usuario).single();
+        if (existente) { mostrarToast('El nombre de usuario ya existe.', true); return; }
+
+        // Crear usuario en Supabase Auth usando signUp
+        // NOTA: Supabase enviará un email de confirmación a menos que
+        // tengas "Email confirmations" desactivado en Authentication > Settings
+        const { data: authData, error: authError } = await sb.auth.signUp({
+            email,
+            password: pass,
+            options: { data: { nombre_completo: nombre, rol } }
+        });
+
+        if (authError) { mostrarToast('Error al crear cuenta: ' + authError.message, true); return; }
+        if (!authData.user) { mostrarToast('No se pudo crear el usuario. Verifica la configuración.', true); return; }
+
+        // Insertar perfil en tabla usuarios
+        const { error: perfilError } = await sb.from('usuarios').insert({
+            id: authData.user.id,
+            nombre_completo: nombre,
+            no_empleado: noEmpleado,
+            usuario,
+            rol
+        });
+
+        if (perfilError) { mostrarToast('Error al guardar perfil: ' + perfilError.message, true); return; }
+
+        invalidarCache();
+        document.getElementById('form-agregar-operador').reset();
+        mostrarToast('✓ Operador agregado correctamente.');
+    } finally {
+        btn.disabled = false;
+        hideLoading();
+    }
+}
+
+async function aplicarFiltrosOperadores() {
+    const usuarios = await getUsuarios();
+    const n = document.getElementById('filtro-op-nombre')?.value.toLowerCase() || '';
+    const em = document.getElementById('filtro-op-empleado')?.value.toLowerCase() || '';
+    const r = document.getElementById('filtro-op-rol')?.value;
+    let u = [...usuarios];
+    if (n) u = u.filter(x => x.nombre_completo.toLowerCase().includes(n));
+    if (em) u = u.filter(x => (x.no_empleado || '').toLowerCase().includes(em));
+    if (r) u = u.filter(x => x.rol === r);
+    return u;
+}
+
+async function cargarOperadores() {
+    const datos = await aplicarFiltrosOperadores();
+    const cols = [
+        { key: 'nombre_completo', label: 'Nombre' },
+        { key: 'no_empleado', label: 'No. Empleado' },
+        { key: 'usuario', label: 'Usuario' },
+        { key: 'rol', label: 'Rol' }
+    ];
+    renderTablaOperadores('tabla-operadores-container', 'paginacion-operadores', datos, cols);
+}
+
+function renderTablaOperadores(cId, pId, datos, cols, pag = 1, oCol = null, oDir = 'asc') {
+    const cont = document.getElementById(cId);
+    const pagDiv = document.getElementById(pId);
+    let ordenados = [...datos];
+    if (oCol) ordenados.sort((a, b) => {
+        let va = a[oCol] || '', vb = b[oCol] || '';
+        return oDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+    const total = Math.ceil(ordenados.length / 10) || 1;
+    if (pag > total) pag = total;
+    const ini = (pag - 1) * 10;
+    const pData = ordenados.slice(ini, ini + 10);
+    let html = '<table><thead><tr>';
+    cols.forEach(c => {
+        const flecha = oCol === c.key ? (oDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+        html += `<th class="${oCol===c.key?'sorted':''}" onclick="ordenarTablaOps('${cId}','${pId}','${c.key}',this)">${c.label}<span class="sort-icon">${flecha}</span></th>`;
+    });
+    html += '<th>Detalle</th></tr></thead><tbody>';
+    if (!pData.length) html += `<tr><td colspan="${cols.length+1}" style="text-align:center;color:#8592a6;padding:2rem;">Sin operadores registrados</td></tr>`;
+    else pData.forEach(u => {
+        html += '<tr>';
+        cols.forEach(c => html += `<td>${valorTabla(u, c.key)}</td>`);
+        html += `<td><button class="btn btn-outline btn-sm" onclick="abrirModalOperador('${u.id}')">${iconSvg('eye')} Consultar</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+    let pHtml = `<button onclick="cambiarPagOps('${cId}','${pId}',${pag-1})" ${pag===1?'disabled':''}>←</button>`;
+    for (let i = 1; i <= total; i++) pHtml += `<button class="${i===pag?'active-page':''}" onclick="cambiarPagOps('${cId}','${pId}',${i})">${i}</button>`;
+    pHtml += `<button onclick="cambiarPagOps('${cId}','${pId}',${pag+1})" ${pag===total?'disabled':''}>→</button>`;
+    pHtml += `<span>${ordenados.length} operadores | Pág ${pag}/${total}</span>`;
+    pagDiv.innerHTML = pHtml;
+    cont.dataset.oCol = oCol || '';
+    cont.dataset.oDir = oDir;
+    cont.dataset.pag = pag;
+    cont.dataset.datosJson = JSON.stringify(datos);
+}
+
+async function cambiarPagOps(cId, pId, pag) {
+    const cont = document.getElementById(cId);
+    const datos = await aplicarFiltrosOperadores();
+    renderTablaOperadores(cId, pId, datos,
+        [{ key: 'nombre_completo', label: 'Nombre' }, { key: 'no_empleado', label: 'No. Empleado' }, { key: 'usuario', label: 'Usuario' }, { key: 'rol', label: 'Rol' }],
+        pag, cont.dataset.oCol, cont.dataset.oDir);
+}
+
+function ordenarTablaOps(cId, pId, col) {
+    const cont = document.getElementById(cId);
+    let dir = 'asc';
+    if (cont.dataset.oCol === col && cont.dataset.oDir === 'asc') dir = 'desc';
+    cont.dataset.oCol = col;
+    cont.dataset.oDir = dir;
+    cambiarPagOps(cId, pId, 1);
+}
+
+// ─── MODALES OPERADORES ───
+async function abrirModalOperador(id) {
+    const usuarios = await getUsuarios();
+    const u = usuarios.find(x => x.id === id);
+    if (!u) return;
+    document.getElementById('modal-op-id').value = u.id;
+    document.getElementById('modal-op-nombre').value = u.nombre_completo;
+    document.getElementById('modal-op-empleado').value = u.no_empleado;
+    document.getElementById('modal-op-usuario').value = u.usuario;
+    document.getElementById('modal-op-contraseña').value = '';
+    document.getElementById('modal-op-rol').value = u.rol;
+    document.getElementById('modal-operador-overlay').classList.remove('hidden');
+}
+
+function cerrarModalOperador() { document.getElementById('modal-operador-overlay').classList.add('hidden'); }
+
+async function actualizarOperadorModal(e) {
+    e.preventDefault();
+    const id = document.getElementById('modal-op-id').value;
+    const nuevoUsuario = document.getElementById('modal-op-usuario').value.trim();
+    const nuevoNombre = document.getElementById('modal-op-nombre').value.trim();
+    const nuevoEmpleado = document.getElementById('modal-op-empleado').value.trim();
+    const nuevoRol = document.getElementById('modal-op-rol').value;
+    const nuevaPass = document.getElementById('modal-op-contraseña').value;
+    showLoading();
+    try {
+        // Verificar usuario duplicado
+        const { data: dup } = await sb.from('usuarios').select('id').eq('usuario', nuevoUsuario).neq('id', id).single();
+        if (dup) { mostrarToast('Nombre de usuario ya existe.', true); return; }
+
+        const { error } = await sb.from('usuarios').update({
+            nombre_completo: nuevoNombre,
+            no_empleado: nuevoEmpleado,
+            usuario: nuevoUsuario,
+            rol: nuevoRol
+        }).eq('id', id);
+
+        if (error) { mostrarToast('Error al actualizar: ' + error.message, true); return; }
+
+        // Si cambió el rol o nombre y es la sesión activa, actualizar sesion
+        if (sesion.id === id) {
+            sesion = { ...sesion, nombre_completo: nuevoNombre, usuario: nuevoUsuario, rol: nuevoRol, no_empleado: nuevoEmpleado };
+            actualizarUI();
+        }
+
+        invalidarCache();
+        cerrarModalOperador();
+        await cargarOperadores();
+        mostrarToast('✓ Operador actualizado.');
+    } finally {
+        hideLoading();
+    }
+}
+
+async function eliminarOperadorModal() {
+    if (!confirm('¿Eliminar este operador? Esta acción no se puede deshacer.')) return;
+    const id = document.getElementById('modal-op-id').value;
+    showLoading();
+    try {
+        const { error } = await sb.from('usuarios').delete().eq('id', id);
+        if (error) { mostrarToast('Error al eliminar: ' + error.message, true); return; }
+        invalidarCache();
+        cerrarModalOperador();
+        await cargarOperadores();
+        mostrarToast('Operador eliminado.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  BITÁCORA
+// ═══════════════════════════════════════════════════════════════════
+
+async function construirFiltrosBitacora() {
+    const isAdmin = sesion?.rol === 'administrador';
+    const usuarios = await getUsuarios();
+    const nombresUnicos = [...new Set(usuarios.map(u => u.nombre_completo))].sort();
+    let opcionesCol = nombresUnicos.map(c => `<option>${escapeHTML(c)}</option>`).join('');
+    const filtroColaborador = isAdmin ? `
+        <div class="form-group"><label>Colaborador</label>
+            <select id="filtro-colaborador" onchange="actualizarVistaBitacora()">
+                <option value="">Todos</option>${opcionesCol}
+            </select>
+        </div>` : '';
+    document.getElementById('filtros-bitacora').innerHTML = `
+        <div class="form-group"><label>Fecha desde</label><input type="date" id="filtro-fecha-desde" onchange="actualizarVistaBitacora()"></div>
+        <div class="form-group"><label>Fecha hasta</label><input type="date" id="filtro-fecha-hasta" onchange="actualizarVistaBitacora()"></div>
+        ${filtroColaborador}
+        <div class="form-group"><label>Tipo de Intervención</label><select id="filtro-tipo-intervencion" onchange="actualizarVistaBitacora()"><option value="">Todos</option>${TIPOS_INTERVENCION.map(t => `<option>${t}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Área</label><select id="filtro-area" onchange="actualizarVistaBitacora()"><option value="">Todas</option></select></div>
+        <button class="btn btn-outline btn-sm" onclick="limpiarFiltrosBitacora()">${iconSvg('x')} Limpiar</button>`;
+    const sel = document.querySelector('#filtros-bitacora #filtro-area');
+    AREAS.forEach(a => sel.innerHTML += `<option>${a}</option>`);
+}
+
+async function aplicarFiltrosBitacora() {
+    let r = await getRegistros();
+    if (sesion.rol === 'operador') r = r.filter(x => x.colaborador === sesion.nombre_completo);
+    const d = document.getElementById('filtro-fecha-desde')?.value;
+    const h = document.getElementById('filtro-fecha-hasta')?.value;
+    const c = document.getElementById('filtro-colaborador')?.value;
+    const ti = document.getElementById('filtro-tipo-intervencion')?.value;
+    const ar = document.getElementById('filtro-area')?.value;
+    if (d) r = r.filter(x => x.fecha_registro >= d);
+    if (h) r = r.filter(x => x.fecha_registro <= h);
+    if (c && sesion?.rol === 'administrador') r = r.filter(x => x.colaborador === c);
+    if (ti) r = r.filter(x => x.tipo_intervencion === ti);
+    if (ar) r = r.filter(x => x.area === ar);
+    return r;
+}
+
+async function actualizarVistaBitacora() {
+    const datos = await aplicarFiltrosBitacora();
+    document.getElementById('total-registros-bitacora').textContent = `Total: ${datos.length} registro(s)`;
+    renderTabla('tabla-bitacora-container', 'paginacion-bitacora', datos,
+        [{ key: 'fecha_registro', label: 'Fecha' }, { key: 'colaborador', label: 'Colaborador' }, { key: 'turno', label: 'Turno' },
+            { key: 'tipo_intervencion', label: 'Intervención' }, { key: 'tiempo_invertido', label: 'Tiempo (h)' }, { key: 'area', label: 'Área' }],
+        1, 'fecha_registro', 'desc');
+}
+
+async function cargarBitacora() {
+    await construirFiltrosBitacora();
+    await actualizarVistaBitacora();
+}
+
+async function limpiarFiltrosBitacora() {
+    document.getElementById('filtro-fecha-desde').value = '';
+    document.getElementById('filtro-fecha-hasta').value = '';
+    if (document.getElementById('filtro-colaborador')) document.getElementById('filtro-colaborador').value = '';
+    document.getElementById('filtro-tipo-intervencion').value = '';
+    document.getElementById('filtro-area').value = '';
+    await actualizarVistaBitacora();
+}
+
+async function descargarCSV() {
+    const r = await getRegistros();
+    let csv = 'ID,Fecha,Colaborador,Turno,Hora reporte,Hora intervención,Hora finalización,Tipo de intervención,Tiempo Invertido (horas),Área,Observaciones\n';
+    r.forEach(x => csv += `${x.id},"${x.fecha_registro}","${x.colaborador}","${x.turno}","${x.hora_reporte}","${x.hora_intervencion}","${x.hora_finalizacion}","${x.tipo_intervencion}",${x.tiempo_invertido},"${x.area}","${(x.observaciones||'').replace(/"/g,'""')}"\n`);
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bitacora_parkdale.csv';
+    a.click();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  TABLA GENÉRICA
+// ═══════════════════════════════════════════════════════════════════
+
+function renderTabla(cId, pId, datos, cols, pag = 1, oCol = null, oDir = 'asc', pp = 10) {
+    const cont = document.getElementById(cId);
+    const pagDiv = document.getElementById(pId);
+    let ordenados = [...datos];
+    if (oCol) ordenados.sort((a, b) => {
+        let va = a[oCol] || '', vb = b[oCol] || '';
+        if (typeof va === 'number') return oDir === 'asc' ? va - vb : vb - va;
+        return oDir === 'asc' ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+    });
+    const total = Math.ceil(ordenados.length / pp) || 1;
+    if (pag > total) pag = total;
+    const ini = (pag - 1) * pp;
+    const pData = ordenados.slice(ini, ini + pp);
+    let html = '<table><thead><tr>';
+    cols.forEach(c => {
+        const flecha = oCol === c.key ? (oDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+        html += `<th class="${oCol===c.key?'sorted':''}" onclick="ordenarTabla('${cId}','${pId}','${c.key}',this)">${c.label}<span class="sort-icon">${flecha}</span></th>`;
+    });
+    html += '<th>Detalle</th></tr></thead><tbody>';
+    if (!pData.length) html += `<tr><td colspan="${cols.length+1}" style="text-align:center;color:#8592a6;padding:2rem;">Sin registros</td></tr>`;
+    else pData.forEach(r => {
+        html += '<tr>';
+        cols.forEach(c => html += `<td>${valorTabla(r, c.key)}</td>`);
+        html += `<td><button class="btn btn-outline btn-sm" onclick="abrirModal(${r.id})">${iconSvg('eye')} Ver</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    cont.innerHTML = html;
+    let pHtml = `<button onclick="cambiarPag('${cId}','${pId}',${pag-1})" ${pag===1?'disabled':''}>←</button>`;
+    for (let i = 1; i <= total; i++) pHtml += `<button class="${i===pag?'active-page':''}" onclick="cambiarPag('${cId}','${pId}',${i})">${i}</button>`;
+    pHtml += `<button onclick="cambiarPag('${cId}','${pId}',${pag+1})" ${pag===total?'disabled':''}>→</button>`;
+    pHtml += `<span>${ordenados.length} registros | Página ${pag}/${total}</span>`;
+    pagDiv.innerHTML = pHtml;
+    cont.dataset.oCol = oCol || '';
+    cont.dataset.oDir = oDir;
+    cont.dataset.pag = pag;
+}
+
+async function cambiarPag(cId, pId, pag) {
+    const cont = document.getElementById(cId);
+    const oCol = cont.dataset.oCol || null;
+    const oDir = cont.dataset.oDir || 'asc';
+    let datos;
+    const cols = [{ key: 'fecha_registro', label: 'Fecha' }, { key: 'colaborador', label: 'Colaborador' }, { key: 'turno', label: 'Turno' },
+        { key: 'tipo_intervencion', label: 'Intervención' }, { key: 'tiempo_invertido', label: 'Tiempo (h)' }, { key: 'area', label: 'Área' }];
+    if (cId === 'tabla-inicio-container') {
+        const todos = await getRegistros();
+        datos = todos.filter(r => r.fecha_registro === fechaISO(new Date()));
+        if (sesion.rol === 'operador') datos = datos.filter(r => r.colaborador === sesion.nombre_completo);
+    } else {
+        datos = await aplicarFiltrosBitacora();
+    }
+    renderTabla(cId, pId, datos, cols, pag, oCol, oDir);
+}
+
+async function ordenarTabla(cId, pId, col) {
+    const cont = document.getElementById(cId);
+    let dir = 'asc';
+    if (cont.dataset.oCol === col && cont.dataset.oDir === 'asc') dir = 'desc';
+    cont.dataset.oCol = col;
+    cont.dataset.oDir = dir;
+    await cambiarPag(cId, pId, 1);
+}
+
+// ─── INICIO ───
+async function cargarInicio() {
+    const hoy = fechaISO(new Date());
+    document.getElementById('fecha-hoy').textContent = fechaLegible(new Date());
+    const todos = await getRegistros(true); // forzar recarga en inicio
+    let datos = todos.filter(r => r.fecha_registro === hoy);
+    if (sesion.rol === 'operador') datos = datos.filter(r => r.colaborador === sesion.nombre_completo);
+    generarTarjetas(datos, 'cards-inicio');
+    renderTabla('tabla-inicio-container', 'paginacion-inicio', datos,
+        [{ key: 'fecha_registro', label: 'Fecha' }, { key: 'colaborador', label: 'Colaborador' }, { key: 'turno', label: 'Turno' },
+            { key: 'tipo_intervencion', label: 'Intervención' }, { key: 'tiempo_invertido', label: 'Tiempo (h)' }, { key: 'area', label: 'Área' }],
+        1, 'fecha_registro', 'desc');
+}
+
+// ─── TARJETAS RESUMEN ───
+function generarTarjetas(registros, containerId) {
+    const container = document.getElementById(containerId);
+    const totalRegistros = registros.length;
+    const tiempoTotal = registros.reduce((s, r) => s + Number(r.tiempo_invertido || 0), 0);
+    const areasUnicas = new Set(registros.map(r => r.area)).size;
+    const tipos = registros.map(r => r.tipo_intervencion);
+    const frec = tipos.reduce((a, b) => { a[b] = (a[b] || 0) + 1; return a; }, {});
+    const masComun = Object.keys(frec).reduce((a, b) => frec[a] > frec[b] ? a : b, '') || 'N/A';
+    container.innerHTML = `
+        <div class="info-card"><div class="card-value">${totalRegistros}</div><div class="card-label">Registros</div></div>
+        <div class="info-card"><div class="card-value">${tiempoTotal.toFixed(2)} h</div><div class="card-label">Tiempo Total Invertido</div></div>
+        <div class="info-card"><div class="card-value">${areasUnicas}</div><div class="card-label">Áreas</div></div>
+        <div class="info-card"><div class="card-value">${masComun}</div><div class="card-label">Intervención Principal</div></div>
+    `;
+}
+
+// ─── MODAL DETALLE REGISTRO ───
+async function abrirModal(id) {
+    const registros = await getRegistros();
+    const reg = registros.find(r => r.id === id);
+    if (!reg) return;
+    document.getElementById('modal-id').value = reg.id;
+    document.getElementById('modal-fecha').value = reg.fecha_registro;
+    document.getElementById('modal-colaborador').value = reg.colaborador;
+    document.getElementById('modal-turno').value = reg.turno;
+    document.getElementById('modal-hora-reporte').value = reg.hora_reporte || '';
+    document.getElementById('modal-hora-intervencion').value = reg.hora_intervencion || '';
+    document.getElementById('modal-hora-finalizacion').value = reg.hora_finalizacion || '';
+    document.getElementById('modal-tipo-intervencion').value = reg.tipo_intervencion;
+    document.getElementById('modal-tiempo').value = reg.tiempo_invertido;
+    document.getElementById('modal-area').value = reg.area;
+    document.getElementById('modal-observaciones').value = reg.observaciones || '';
+    document.getElementById('modal-overlay').classList.remove('hidden');
+    actualizarUI();
+    const btnEliminar = document.getElementById('btn-eliminar-registro');
+    if (btnEliminar) btnEliminar.style.display = sesion?.rol === 'administrador' ? 'inline-flex' : 'none';
+    renderStaticIcons();
+}
+
+function cerrarModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+async function eliminarRegistroModal() {
+    if (sesion?.rol !== 'administrador') { mostrarToast('Sin permisos.', true); return; }
+    if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+    const id = Number(document.getElementById('modal-id').value);
+    showLoading();
+    try {
+        const { error } = await sb.from('registros').delete().eq('id', id);
+        if (error) { mostrarToast('Error al eliminar: ' + error.message, true); return; }
+        invalidarCache();
+        cerrarModal();
+        const vistaActiva = document.querySelector('.view.active');
+        if (vistaActiva?.id === 'view-consultar-bitacora') {
+            await actualizarVistaBitacora();
+        } else {
+            await cargarInicio();
+        }
+        mostrarToast('Registro eliminado.');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ESTADÍSTICAS
+// ═══════════════════════════════════════════════════════════════════
+
+let chartsInstances = {};
+
+async function construirFiltrosEstadisticas() {
+    const isAdmin = sesion?.rol === 'administrador';
+    const usuarios = await getUsuarios();
+    const nombresUnicos = [...new Set(usuarios.map(u => u.nombre_completo))].sort();
+    let opcionesCol = nombresUnicos.map(c => `<option>${escapeHTML(c)}</option>`).join('');
+    const filtroCol = isAdmin ? `
+        <div class="form-group"><label>Colaborador</label>
+            <select id="filtro-est-colaborador" onchange="actualizarVistaEstadisticas()">
+                <option value="">Todos</option>${opcionesCol}
+            </select>
+        </div>` : '';
+    document.getElementById('filtros-estadisticas').innerHTML = `
+        ${filtroCol}
+        <div class="form-group"><label>Turno</label><select id="filtro-est-turno" onchange="actualizarVistaEstadisticas()"><option value="">Todos</option>${TURNOS.map(t => `<option>${t}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Tipo de Intervención</label><select id="filtro-est-tipo-intervencion" onchange="actualizarVistaEstadisticas()"><option value="">Todos</option>${TIPOS_INTERVENCION.map(t => `<option>${t}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Área</label><select id="filtro-est-area" onchange="actualizarVistaEstadisticas()"><option value="">Todas</option></select></div>
+        <button class="btn btn-outline btn-sm" onclick="limpiarFiltrosEstadisticas()">${iconSvg('x')} Limpiar</button>`;
+    const sel = document.querySelector('#filtros-estadisticas #filtro-est-area');
+    AREAS.forEach(a => sel.innerHTML += `<option>${a}</option>`);
+}
+
+async function aplicarFiltrosEstadisticas() {
+    let regs = await getRegistros();
+    if (sesion.rol === 'operador') regs = regs.filter(r => r.colaborador === sesion.nombre_completo);
+    const c = document.getElementById('filtro-est-colaborador')?.value;
+    const t = document.getElementById('filtro-est-turno')?.value;
+    const ti = document.getElementById('filtro-est-tipo-intervencion')?.value;
+    const ar = document.getElementById('filtro-est-area')?.value;
+    if (c && sesion?.rol === 'administrador') regs = regs.filter(r => r.colaborador === c);
+    if (t) regs = regs.filter(r => r.turno === t);
+    if (ti) regs = regs.filter(r => r.tipo_intervencion === ti);
+    if (ar) regs = regs.filter(r => r.area === ar);
+    return regs;
+}
+
+async function actualizarVistaEstadisticas() {
+    const regs = await aplicarFiltrosEstadisticas();
+    generarTarjetas(regs, 'cards-estadisticas');
+    Object.values(chartsInstances).forEach(ch => ch.destroy());
+    chartsInstances = {};
+
+    const areasCount = {};
+    regs.forEach(r => { areasCount[r.area] = (areasCount[r.area] || 0) + 1; });
+    const aL = Object.keys(areasCount).sort((a, b) => areasCount[b] - areasCount[a]);
+    chartsInstances.barras = new Chart(document.getElementById('chart-barras'), {
+        type: 'bar', data: { labels: aL, datasets: [{ label: 'Registros', data: aL.map(a => areasCount[a]), backgroundColor: '#a3b18a', borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    const tipoC = {};
+    regs.forEach(r => { tipoC[r.tipo_intervencion] = (tipoC[r.tipo_intervencion] || 0) + 1; });
+    chartsInstances.pastel = new Chart(document.getElementById('chart-pastel'), {
+        type: 'pie', data: { labels: Object.keys(tipoC), datasets: [{ data: Object.values(tipoC), backgroundColor: ['#1b263b', '#778da9'] }] },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    const turnoC = {};
+    regs.forEach(r => { turnoC[r.turno] = (turnoC[r.turno] || 0) + 1; });
+    const tL = Object.keys(turnoC).sort((a, b) => turnoC[b] - turnoC[a]);
+    chartsInstances.turno = new Chart(document.getElementById('chart-turno'), {
+        type: 'bar', data: { labels: tL, datasets: [{ label: 'Registros', data: tL.map(t => turnoC[t]), backgroundColor: '#4a5759', borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    const fechaC = {};
+    const hace30 = restarDias(new Date(), 30);
+    regs.filter(r => r.fecha_registro >= fechaISO(hace30)).forEach(r => { fechaC[r.fecha_registro] = (fechaC[r.fecha_registro] || 0) + 1; });
+    const fL = Object.keys(fechaC).sort();
+    chartsInstances.linea = new Chart(document.getElementById('chart-linea'), {
+        type: 'line', data: { labels: fL, datasets: [{ label: 'Registros/día', data: fL.map(f => fechaC[f]), borderColor: '#2b5577', backgroundColor: 'rgba(43,85,119,0.12)', fill: true, tension: 0.3 }] },
+        options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+
+    const areaT = {};
+    regs.forEach(r => { areaT[r.area] = (areaT[r.area] || 0) + Number(r.tiempo_invertido || 0); });
+    const aTL = Object.keys(areaT).sort((a, b) => areaT[b] - areaT[a]);
+    chartsInstances.barrasTiempo = new Chart(document.getElementById('chart-barras-tiempo'), {
+        type: 'bar', data: { labels: aTL, datasets: [{ label: 'Horas', data: aTL.map(a => areaT[a].toFixed(2)), backgroundColor: '#344e41', borderRadius: 6 }] },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+}
+
+async function cargarEstadisticas() {
+    await construirFiltrosEstadisticas();
+    await actualizarVistaEstadisticas();
+}
+
+async function limpiarFiltrosEstadisticas() {
+    if (document.getElementById('filtro-est-colaborador')) document.getElementById('filtro-est-colaborador').value = '';
+    document.getElementById('filtro-est-turno').value = '';
+    document.getElementById('filtro-est-tipo-intervencion').value = '';
+    document.getElementById('filtro-est-area').value = '';
+    await actualizarVistaEstadisticas();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  INICIALIZACIÓN
+// ═══════════════════════════════════════════════════════════════════
+
+async function init() {
+    renderStaticIcons();
+
+    // Verificar configuración
+    if (SUPABASE_URL === 'https://TU_PROYECTO.supabase.co' || SUPABASE_KEY === 'TU_ANON_PUBLIC_KEY') {
+        document.getElementById('config-banner').classList.add('visible');
+        hideLoading();
+        return;
+    }
+
+    try {
+        // Verificar sesión activa (el usuario ya había iniciado sesión antes)
+        const { data: { session } } = await sb.auth.getSession();
+        if (session) {
+            const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
+            if (perfil) {
+                sesion = perfil;
+                document.getElementById('login-screen').classList.add('hidden');
+                actualizarUI();
+                await switchView('inicio');
+            }
+        }
+    } catch (e) {
+        console.error('Error de inicialización:', e);
+    } finally {
+        hideLoading();
+    }
+
+    document.getElementById('cr-fecha').value = fechaISO(new Date());
+    document.getElementById('modal-overlay').addEventListener('click', function(e) { if (e.target === this) cerrarModal(); });
+    document.getElementById('modal-operador-overlay').addEventListener('click', function(e) { if (e.target === this) cerrarModalOperador(); });
+    document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') login(); });
+}
+
+init();
+</script>
+</body>
+</html>
