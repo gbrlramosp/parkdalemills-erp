@@ -273,6 +273,9 @@
             </div>
             <div style="margin-top:1.5rem;display:flex;gap:0.8rem;flex-wrap:wrap;">
                 <button type="button" class="btn btn-outline" onclick="cerrarModal()"><span class="btn-icon" data-icon="x"></span> Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btn-editar-registro" style="display:none;" onclick="activarEdicionRegistro()"><span class="btn-icon" data-icon="edit"></span> Editar Registro</button>
+                <button type="button" class="btn btn-success" id="btn-guardar-registro" style="display:none;" onclick="guardarCambiosRegistro()"><span class="btn-icon" data-icon="save"></span> Guardar Cambios</button>
+                <button type="button" class="btn" id="btn-eliminar-registro" style="background:var(--danger);color:#fff;display:none;" onclick="eliminarRegistroModal()"><span class="btn-icon" data-icon="trash"></span> Eliminar Registro</button>
             </div>
         </form>
     </div>
@@ -283,7 +286,7 @@
     <div class="modal" id="modal-operador">
         <button class="modal-close" onclick="cerrarModalOperador()" aria-label="Cerrar"><span class="btn-icon" data-icon="x"></span></button>
         <h3><span class="title-icon" data-icon="user"></span> Datos del Operador</h3>
-        <form id="form-modal-operador" onsubmit="actualizarOperadorModal(event)">
+        <form id="form-modal-operador" onsubmit="event.preventDefault()">
             <input type="hidden" id="modal-op-id">
             <div class="form-grid">
                 <div class="form-group"><label>Nombre Completo</label><input type="text" id="modal-op-nombre" disabled></div>
@@ -780,62 +783,10 @@ async function abrirModalOperador(id) {
     document.getElementById('modal-op-empleado').value = u.no_empleado;
     document.getElementById('modal-op-usuario').value = u.usuario;
     document.getElementById('modal-op-rol').value = u.rol;
-    setOperadorEditMode(false);
     document.getElementById('modal-operador-overlay').classList.remove('hidden');
 }
 
 function cerrarModalOperador() { document.getElementById('modal-operador-overlay').classList.add('hidden'); }
-
-function setOperadorEditMode(editando = false) {
-    const permitido = sesion?.rol === 'administrador';
-    document.getElementById('modal-op-nombre').disabled = !(permitido && editando);
-    document.getElementById('modal-op-empleado').disabled = !(permitido && editando);
-    document.getElementById('modal-op-rol').disabled = !(permitido && editando);
-    // El usuario corresponde al email interno de Auth y se mantiene inmutable.
-    document.getElementById('modal-op-usuario').disabled = true;
-    document.getElementById('btn-editar-operador').style.display = permitido && !editando ? 'inline-flex' : 'none';
-    document.getElementById('btn-guardar-operador').style.display = permitido && editando ? 'inline-flex' : 'none';
-    document.getElementById('btn-modal-eliminar-operador').style.display = permitido ? 'inline-flex' : 'none';
-}
-
-function activarEdicionOperador() {
-    setOperadorEditMode(true);
-    mostrarToast('Edición habilitada. El nombre de usuario no puede cambiarse.');
-}
-
-async function actualizarOperadorModal(e) {
-    e.preventDefault();
-    if (sesion?.rol !== 'administrador') { mostrarToast('Sin permisos.', true); return; }
-    const id = document.getElementById('modal-op-id').value;
-    const nuevoNombre = document.getElementById('modal-op-nombre').value.trim();
-    const nuevoEmpleado = document.getElementById('modal-op-empleado').value.trim();
-    const nuevoRol = document.getElementById('modal-op-rol').value;
-
-    showLoading();
-    try {
-        const { data: perfilActualizado, error } = await sb.from('usuarios').update({
-            nombre_completo: nuevoNombre,
-            no_empleado: nuevoEmpleado,
-            rol: nuevoRol
-        }).eq('id', id).select('id').single();
-
-        if (error) { mostrarToast('Error al actualizar: ' + error.message, true); return; }
-        if (!perfilActualizado) { mostrarToast('Supabase no confirmó la actualización.', true); return; }
-
-        // Si cambió el rol o nombre y es la sesión activa, actualizar sesion
-        if (sesion.id === id) {
-            sesion = { ...sesion, nombre_completo: nuevoNombre, rol: nuevoRol, no_empleado: nuevoEmpleado };
-            actualizarUI();
-        }
-
-        invalidarCache();
-        cerrarModalOperador();
-        await cargarOperadores();
-        mostrarToast('✓ Operador actualizado.');
-    } finally {
-        hideLoading();
-    }
-}
 
 async function eliminarOperadorModal() {
     if (sesion?.rol !== 'administrador') { mostrarToast('Sin permisos.', true); return; }
